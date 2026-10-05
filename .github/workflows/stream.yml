@@ -1,4 +1,4 @@
-    - name: CCTV ke YouTube 
+    - name: CCTV ke YouTube
       run: |
         timeout 20700s bash -c '
         while true; do 
