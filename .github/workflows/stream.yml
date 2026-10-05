@@ -1,0 +1,27 @@
+name: 24/7 CCTV Restreamer
+
+on:
+  schedule:
+    # Server cloud akan menyala otomatis secara bergantian setiap 6 jam
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Memunculkan tombol manual untuk menyalakan kapan saja
+
+jobs:
+  restream:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Memasang FFmpeg di Server Cloud
+      run: |
+        sudo apt update
+        sudo apt install ffmpeg -y
+
+    - name: Menjalankan Skrip Anti-Putus
+      run: |
+        # Membatasi durasi jalan selama 5 jam 50 menit agar server estafet berjalan mulus
+        timeout 21000s bash -c '
+        while true; do 
+          ffmpeg -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -fflags nobuffer -flags low_delay -i "${{ secrets.URL_CCTV }}" -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -c:v copy -c:a aac -b:a 128k -f flv "rtmp://a.rtmp.youtube.com/live2/{{ secrets.STREAM_KEY }}"; 
+          echo "Streaming terputus, mencoba menghubungkan kembali..."; 
+          sleep 5; 
+        done' || true
