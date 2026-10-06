@@ -7,7 +7,7 @@ on:
 
 jobs:
   stream:
-    runs-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
@@ -19,9 +19,12 @@ jobs:
         sudo apt-get install -y ffmpeg
 
     - name: Start Live Streaming from HLS
+      env:
+        CCTV_URL: ${{ secrets.HTTP_URL }}
+        STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
       run: |
-        ffmpeg -re -i "${{ secrets.HTTP_URL }}" -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 \
+        ffmpeg -re -i "$CCTV_URL" -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 \
         -c:v copy \
         -c:a aac -b:a 128k \
         -map 0:v:0 -map 1:a:0 \
-        -f flv "rtmp://://youtube.com{{ secrets.YOUTUBE_STREAM_KEY }}"
+        -f flv "rtmp://a.rtmp.youtube.com/live2"
