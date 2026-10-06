@@ -13,10 +13,10 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Install FFmpeg
+    - name: Install FFmpeg and TLS Libs
       run: |
         sudo apt-get update
-        sudo apt-get install -y ffmpeg
+        sudo apt-get install -y ffmpeg gnutls-bin
 
     - name: Start Live Streaming from HLS
       env:
@@ -24,12 +24,14 @@ jobs:
         STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
       run: |
         ffmpeg -re \
-        -protocol_whitelist file,http,https,tcp,tls,crypto \
+        -headers "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+        -protocol_whitelist "file,http,https,tcp,tls,crypto" \
         -i "$CCTV_URL" \
         -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 \
         -c:v copy \
-        -c:a aac -b:a 128k \
+        -c:a aac -b:a 128k -ar 44100 \
         -map 0:v:0 -map 1:a:0 \
         -bsf:a aac_adtstoasc \
+        -bufsize 3000k \
         -flags +global_header \
         -f flv "rtmp://a.rtmp.youtube.com/live2"
