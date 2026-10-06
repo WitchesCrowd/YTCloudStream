@@ -1,0 +1,25 @@
+name: Live Stream HLS to YouTube
+
+on:
+  workflow_dispatch: # Tombol manual untuk menyalakan/mematikan
+  schedule:
+    - cron: '0 */5 * * *' # Otomatis restart setiap 5 jam (menghindari timeout 6 jam GitHub)
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install FFmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    - name: Start Live Streaming from HLS
+      run: |
+        ffmpeg -re -f hls -i "${{ secrets.URL_CCTV }}" \
+        -c:v copy -c:a aac -b:a 128k -ar 44100 \
+        -f flv "rtmp://://youtube.com{{ secrets.STREAM_KEY }}"
